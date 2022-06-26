@@ -1,6 +1,6 @@
 [package]
 name = "datapack"
-version = "1.0.1"
+version = "1.0.2"
 edition = "2021"
 license = "MIT"
 description = "An easy way to create Minecraft datapacks in rust"
