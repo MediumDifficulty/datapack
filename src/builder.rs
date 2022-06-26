@@ -94,7 +94,7 @@ impl DataPackBuilder {
     /// ```
     pub fn build(&self, file: &File) {
         let options = FileOptions::default()
-            .compression_method(zip::CompressionMethod::Zstd);
+            .compression_method(zip::CompressionMethod::Stored);
 
         let mut writer = ZipWriter::new(file);
 
