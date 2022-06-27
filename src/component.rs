@@ -4,6 +4,7 @@ use flate2::{write::GzEncoder, Compression};
 use nbt::{CompoundTag, encode::write_compound_tag};
 use zip::{ZipWriter, write::FileOptions};
 
+/// Represents a .nbt file
 #[derive(Clone)]
 pub struct Nbt {
     pub content: Vec<u8>,
@@ -11,6 +12,7 @@ pub struct Nbt {
 }
 
 impl Nbt {
+    /// Creates a new nbt file that is gzipped (useful for structures)
     pub fn new_gz<S: Into<String>>(content: CompoundTag, path: S) -> Self {
         let mut buf = Vec::new();
         write_compound_tag(&mut buf, &content).unwrap();
@@ -21,6 +23,7 @@ impl Nbt {
         Self { content: gzipped.finish().unwrap(), path: path.into() }
     }
 
+    /// Creates an uncompressed nbt file
     pub fn new<S: Into<String>>(content: CompoundTag, path: S) -> Self {
         let mut buf = Vec::new();
         write_compound_tag(&mut buf, &content).unwrap();
@@ -29,6 +32,7 @@ impl Nbt {
     }
 }
 
+/// Represents a .mcfunction file
 #[derive(Clone)]
 pub struct MCFunction {
     pub content: Vec<u8>,
@@ -45,6 +49,7 @@ impl MCFunction {
     }
 }
 
+/// Represents a .json file
 #[derive(Clone)]
 pub struct Json {
     pub content: Vec<u8>,
@@ -61,36 +66,88 @@ impl Json {
 
 #[derive(Clone)]
 pub enum Component {
+    /// A file in the `advancements` directory
     Advancement(Json),
+
+    /// A file in the `functions` directory
     Function(MCFunction),
+
+    /// A file in the `item_modifiers` directory
     ItemModifier(Json),
+
+    /// A file in the `loot_tables` directory
     LootTable(Json),
+
+    /// A file in the `predicates` directory
     Predicate(Json),
+
+    /// A file in the `recipes` directory
     Recipe(Json),
+
+    /// A file in the `structures` directory
     Structure(Nbt),
 
+
+    /// A file in the `tags/blocks` directory
     TagBlock(Json),
+
+    /// A file in the `tags/entity_types` directory
     TagEntityType(Json),
+
+    /// A file in the `tags/fluids` directory
     TagFluid(Json),
+
+    /// A file in the `tags/functions` directory
     TagFunction(Json),
+
+    /// A file in the `tags/game_events` directory
     TagGameEvent(Json),
+
+    /// A file in the `tags/items` directory
     TagItem(Json),
-    
+
+
+    /// A file in the `dimensions` directory
     Dimension(Json),
+
+    /// A file in the `dimension_type` directory
     DimensionType(Json),
 
+
+    /// A file in the `worldgen/biome` directory
     WorldGenBiome(Json),
+
+    /// A file in the `worldgen/configured_carver` directory
     WorldGenConfiguredCarver(Json),
+
+    /// A file in the `worldgen/configured_feature` directory
     WorldGenConfiguredFeature(Json),
+
+    /// A file in the `worldgen/configured_structure_feature` directory
     WorldGenConfiguredStructureFeature(Json),
+
+    /// A file in the `worldgen/configured_surface_builder` directory
     WorldGenConfiguredSurfaceBuilder(Json),
+
+    /// A file in the `worldgen/noise_settings` directory
     WorldGenNoiseSettings(Json),
+
+    /// A file in the `worldgen/placed_feature` directory
     WorldGenPlacedFeature(Json),
+
+    /// A file in the `worldgen/processor_list` directory
     WorldGenProcessorList(Json),
+
+    /// A file in the `worldgen/template_pool` directory
     WorldGenTemplatePool(Json),
 
+    /// A generic .json file that can be anywhere
     Json(Json),
+
+    /// A generic nbt .nbt that can be anywhere
     Nbt(Nbt),
+
+    /// A generic .mcfunction file that can be anywhere
     MCFunction(MCFunction),
 }
 

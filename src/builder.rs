@@ -4,7 +4,25 @@ use zip::{ZipWriter, write::FileOptions};
 
 use crate::{component::Component, namespace::Namespace};
 
-
+/// A DataPack builder
+/// 
+/// # Examples
+/// 
+/// ```
+/// use datapack::builder::DataPackBuilder;
+/// use datapack::component::{Component, MCFunction};
+/// use datapack::namespace::Namespace;
+///
+/// use std::fs::File;
+///
+/// let file = File::create("example.zip").unwrap();
+///
+/// DataPackBuilder::new()
+///     .add_namespace(
+///         Namespace::new("example")
+///             .add_component(Component::Function(MCFunction::new("say hello world", "hello", true, false)))
+///     ).build(&file)
+/// ```
 pub struct DataPackBuilder {
     namespaces: Vec<Namespace>,
     pack_format: usize,
@@ -29,11 +47,13 @@ impl DataPackBuilder {
         self
     }
 
+    /// Adds a namespace to the pack
     pub fn add_namespace(&mut self, namespace: &Namespace) -> &mut Self {
         self.namespaces.push(namespace.to_owned());
         self
     }
 
+    // Builds the DataPack
     pub fn build(&self, file: &File) {
         let options = FileOptions::default()
             .compression_method(zip::CompressionMethod::Stored);
