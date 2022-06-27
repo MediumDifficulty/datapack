@@ -1,61 +1,20 @@
-pub mod mcfunction;
-pub mod structure;
-
 use std::{fs::File, io::Write};
 
 use zip::{ZipWriter, write::FileOptions};
 
-use self::{mcfunction::MCFunction, structure::Structure};
+use crate::{component::Component, namespace::Namespace};
 
-/// # Examples
-/// 
-/// ```
-/// use datapack::builder::DataPackBuilder;
-/// 
-/// let mut pack = DataPackBuilder::new();
-/// 
-/// pack.set_pack_format(10)
-///     .set_name(String::from("my datapack"))
-///     .set_description(String::from("my informative description"));
-/// ```
+
 pub struct DataPackBuilder {
-    mc_functions: Vec<MCFunction>,
-    structures: Vec<Structure>,
+    namespaces: Vec<Namespace>,
     pack_format: usize,
     description: String,
-    name: String,
 }
 
 impl DataPackBuilder {
     /// Creates a new instance of DataPackBuilder
     pub fn new() -> Self {
-        DataPackBuilder { mc_functions: Vec::new(), structures: Vec::new(), pack_format: 10, description: String::new(), name: String::new() }
-    }
-
-    /// Adds a .mcfunction file to the datapack
-    /// 
-    /// # Examples
-    /// 
-    /// ```
-    /// use datapack::builder::DataPackBuilder;
-    /// use datapack::builder::mcfunction::MCFunction;
-    /// 
-    /// let mut pack = DataPackBuilder::new();
-    /// 
-    /// let mc_function = MCFunction::new(&String::from("say hi"), &String::from("hello"), true, false);
-    /// 
-    /// pack.add_mc_function(mc_function);
-    /// ```
-    pub fn add_mc_function(&mut self, function: MCFunction) -> &mut Self {
-        self.mc_functions.push(function);
-        self
-    }
-
-    /// Adds a structure file to the datapack.
-    /// To use this you must create a new Structure, then give it a gzipped byte Vec containing the structure in the nbt file format
-    pub fn add_structure(&mut self, structure: Structure) -> &mut Self {
-        self.structures.push(structure);
-        self
+        DataPackBuilder { namespaces: Vec::new(), pack_format: 10, description: String::new() }
     }
 
     /// Sets the "pack_format" in the pack.mcmeta
@@ -70,28 +29,11 @@ impl DataPackBuilder {
         self
     }
 
-    /// Sets the namespace name in the datapack
-    pub fn set_name(&mut self, name: String) -> &mut Self {
-        self.name = name;
+    pub fn add_namespace(&mut self, namespace: &Namespace) -> &mut Self {
+        self.namespaces.push(namespace.to_owned());
         self
     }
 
-    /// Builds the datapack
-    /// 
-    /// # Examples
-    /// 
-    /// ```
-    /// use datapack::builder::DataPackBuilder;
-    /// use std::fs::File;
-    /// 
-    /// let file = File::create("my_datapack.zip").unwrap();
-    /// 
-    /// DataPackBuilder::new()
-    ///     .set_pack_format(10)
-    ///     .set_name(String::from("my_datapack"))
-    ///     .set_description(String::from("my informative description"))
-    ///     .build(&file);
-    /// ```
     pub fn build(&self, file: &File) {
         let options = FileOptions::default()
             .compression_method(zip::CompressionMethod::Stored);
@@ -111,38 +53,35 @@ impl DataPackBuilder {
                 .as_bytes()).unwrap();
 
 
-        self.add_mc_function_files(&mut writer, &options);
+        for namespace in &self.namespaces {
+            for component in &namespace.components {
+                component.write_to_file(&mut writer, &options, &namespace.name)
+            }
+        }
+
         self.create_vanilla_function_tags(&mut writer, &options);
-        self.add_structure_files(&mut writer, &options);
 
         writer.finish().unwrap();
     }
 
-    fn add_structure_files(&self, writer: &mut ZipWriter<&File>, options: &FileOptions) {
-        for structure in &self.structures {
-            writer.start_file(format!("data/{}/structures/{}.nbt", self.name, structure.path).as_str(), *options).unwrap();
-            writer.write_all(structure.contents.as_slice()).unwrap();
-        }
-    }
-
-    fn add_mc_function_files(&self, writer: &mut ZipWriter<&File>, options: &FileOptions) {
-        for function in &self.mc_functions {
-            writer.start_file(format!("data/{}/functions/{}.mcfunction", self.name, function.path).as_str(), *options).unwrap();
-            writer.write_all(function.contents.as_bytes()).unwrap();
-        }
-    }
-    
     fn create_vanilla_function_tags(&self, writer: &mut ZipWriter<&File>, options: &FileOptions) {
         let mut load_file = String::from("{\n\t\"values\": [\n");
         let mut tick_file = String::from("{\n\t\"values\": [\n");
 
-        for function in &self.mc_functions {
-            if function.ran_on_load {
-                load_file.push_str(format!("\t\t\"{}:{}\",\n", self.name, function.path).as_str())
-            }
-
-            if function.ran_on_tick {
-                tick_file.push_str(format!("\t\t\"{}:{}\",\n", self.name, function.path).as_str())
+        for namespace in &self.namespaces {
+            for component in &namespace.components {
+                match component {
+                    Component::Function(properties) => {
+                        if properties.ran_on_load {
+                            load_file.push_str(format!("\t\t\"{}:{}\",\n", namespace.name, properties.path).as_str())
+                        }
+            
+                        if properties.ran_on_tick {
+                            tick_file.push_str(format!("\t\t\"{}:{}\",\n", namespace.name, properties.path).as_str())
+                        }
+                    },
+                    _ => continue
+                }
             }
         }
 

@@ -14,3 +14,5 @@ rustc-args = ["--cfg", "docsrs"]
 
 [dependencies]
 zip = "0.6.2"
+named-binary-tag = "0.6.0"
+flate2 = "1.0.24"
