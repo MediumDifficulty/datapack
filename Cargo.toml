@@ -4,7 +4,7 @@ version = "2.0.0"
 edition = "2021"
 license = "MIT"
 description = "An easy way to create Minecraft datapacks in rust"
-documentation = "https://docs.rs/datapack/1.0.0/datapack/"
+documentation = "https://docs.rs/datapack/2.0.0/datapack/"
 repository = "https://github.com/MediumDifficulty/datapack"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
