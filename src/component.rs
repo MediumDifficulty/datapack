@@ -11,14 +11,21 @@ pub struct Nbt {
 }
 
 impl Nbt {
-    pub fn new(content: CompoundTag, path: String) -> Self {
+    pub fn new_gz<S: Into<String>>(content: CompoundTag, path: S) -> Self {
         let mut buf = Vec::new();
         write_compound_tag(&mut buf, &content).unwrap();
 
         let mut gzipped = GzEncoder::new(Vec::new(), Compression::default());
         gzipped.write_all(&buf).unwrap();
 
-        Self { content: gzipped.finish().unwrap(), path }
+        Self { content: gzipped.finish().unwrap(), path: path.into() }
+    }
+
+    pub fn new<S: Into<String>>(content: CompoundTag, path: S) -> Self {
+        let mut buf = Vec::new();
+        write_compound_tag(&mut buf, &content).unwrap();
+
+        Self { content: buf, path: path.into() }
     }
 }
 
@@ -31,8 +38,10 @@ pub struct MCFunction {
 }
 
 impl MCFunction {
-    pub fn new(content: String, path: String, ran_on_load: bool, ran_on_tick: bool) -> Self {
-        Self { content: content.into_bytes(), path, ran_on_load, ran_on_tick }
+    pub fn new<S: Into<String>>(content: S, path: S, ran_on_load: bool, ran_on_tick: bool) -> Self {
+        let s: String = content.into();
+
+        Self { content: s.into_bytes(), path: path.into(), ran_on_load, ran_on_tick }
     }
 }
 
@@ -43,8 +52,10 @@ pub struct Json {
 }
 
 impl Json {
-    pub fn new(content: String, path: String) -> Self {
-        Self { content: content.into_bytes(), path }
+    pub fn new<S: Into<String>>(content: S, path: S) -> Self {
+        let s: String = content.into();
+
+        Self { content: s.into_bytes(), path: path.into() }
     }
 }
 
@@ -77,6 +88,10 @@ pub enum Component {
     WorldGenPlacedFeature(Json),
     WorldGenProcessorList(Json),
     WorldGenTemplatePool(Json),
+
+    Json(Json),
+    Nbt(Nbt),
+    MCFunction(MCFunction),
 }
 
 impl Component {
@@ -106,6 +121,8 @@ impl Component {
             Component::WorldGenPlacedFeature(_) =>              "worldgen/placed_feature",
             Component::WorldGenProcessorList(_) =>              "worldgen/processor_list",
             Component::WorldGenTemplatePool(_) =>               "worldgen/template_pool",
+
+            _ => ""
         }
     }
 
@@ -135,6 +152,10 @@ impl Component {
             Component::WorldGenPlacedFeature(it) =>              Self::write_file(writer, options, &format!("data/{}/{}/{}.json", namespace, self.path(), it.path), it.content.as_slice()),
             Component::WorldGenProcessorList(it) =>              Self::write_file(writer, options, &format!("data/{}/{}/{}.json", namespace, self.path(), it.path), it.content.as_slice()),
             Component::WorldGenTemplatePool(it) =>               Self::write_file(writer, options, &format!("data/{}/{}/{}.json", namespace, self.path(), it.path), it.content.as_slice()),
+
+            Component::Json(it) =>                               Self::write_file(writer, options, &format!("data/{}/{}.json", namespace, it.path), it.content.as_slice()),
+            Component::Nbt(it) =>                                 Self::write_file(writer, options, &format!("data/{}/{}.nbt", namespace, it.path), it.content.as_slice()),
+            Component::MCFunction(it) =>                   Self::write_file(writer, options, &format!("data/{}/{}.mcfunction", namespace, it.path), it.content.as_slice()),
         }
     }
 

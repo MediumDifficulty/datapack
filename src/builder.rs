@@ -24,8 +24,8 @@ impl DataPackBuilder {
     }
 
     /// Sets the "description" in the pack.mcmeta
-    pub fn set_description(&mut self, description: String) -> &mut Self {
-        self.description = description;
+    pub fn set_description(&mut self, description: &str) -> &mut Self {
+        self.description = String::from(description);
         self
     }
 
