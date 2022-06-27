@@ -53,7 +53,7 @@ impl DataPackBuilder {
         self
     }
 
-    // Builds the DataPack
+    /// Builds the DataPack
     pub fn build(&self, file: &File) {
         let options = FileOptions::default()
             .compression_method(zip::CompressionMethod::Stored);

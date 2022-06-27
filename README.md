@@ -1,8 +1,5 @@
 # A lightweight way to create Minecraft datapacks in rust
 
-## Features
-- Can easily create 
-
 ## Covered datapack files that can be created easily
 - advancements
 - functions
