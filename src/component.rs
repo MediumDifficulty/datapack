@@ -30,6 +30,11 @@ impl Nbt {
 
         Self { content: buf, path: path.into() }
     }
+
+    /// Creates a NBT file from raw bytes
+    pub fn from_raw<S: Into<String>>(bytes: Vec<u8>, path: S) -> Self {
+        Self { content: bytes, path: path.into() }
+    }
 }
 
 /// Represents a .mcfunction file
